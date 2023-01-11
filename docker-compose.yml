@@ -1,0 +1,24 @@
+version: '3.4'
+services:
+  test-robots: &test-robots
+    build:
+      context: .
+    image: test-robots-nodejs
+    container_name: test-robots
+    env_file:
+      - .env
+    volumes:
+      - .:/robots/
+    command: ['npm', 'run', 'cron-job', '/bin/sh']
+
+  robots: &robots
+    build:
+      context: .
+      dockerfile: Dockerfile-prod
+    image: prod-robots-nodejs
+    container_name: production-robots
+    env_file:
+      - .env
+    environment:
+      - PRIORITY_DEFAULT=DOMAIN_IMSS_INABILITY
+    command: ['npm', 'run', 'cron-job-prod', '/bin/sh']

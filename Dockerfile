@@ -1,0 +1,38 @@
+FROM node:12-slim
+
+RUN apt-get update && apt-get install python openssl bash bash-doc bash-completion dpkg wget nano poppler-utils --yes
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN dpkg -i google-chrome-stable_current_amd64.deb; apt-get -fy install
+RUN rm -rf google-chrome-stable_current_amd64.deb
+
+#create workspace in docker container
+ENV dir /robots
+RUN mkdir -p $dir
+WORKDIR $dir
+
+#copy package.json and install all dependencies
+COPY package.json $dir
+COPY .npmrc $dir
+RUN npm install puppeteer --unsafe-perm=true --production
+RUN npm install
+RUN npm install --production
+#set Timezone
+ENV TZ America/Mexico_City
+
+#copy scrapers files anly ignore .dockerignore
+COPY . $dir
+
+#create directories in robots!! IMPORTANT --------------------------------------------------------------
+ENV temporalFiles temp
+
+ENV scrapers $dir/scrapers
+RUN mkdir $scrapers/$temporalFiles
+RUN chmod 777 $scrapers/$temporalFiles
+
+
+#create files txt!! IMPORTANT -------------------------------------------------------------------------
+ENV job job.txt
+
+ENV cronJob $dir/cron-job
+RUN touch $cronJob/$job
+CMD ["npm", "run", "cron-job", "/bin/sh"]
